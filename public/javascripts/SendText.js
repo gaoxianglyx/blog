@@ -23,9 +23,9 @@ class SendText extends React.Component {
     }
     render() {
         return (
-            <form className="TextForm" onSubmit={this.handleSubmit.bind(this)}>
-                <input type="text" placeholder="标题" ref="title" /><br/>
-                <textarea rows="10" cols="30" placeholder="文章内容" ref="contents" />
+            <form className="textForm" onSubmit={this.handleSubmit.bind(this)}>
+                <input type="text" placeholder="标题" size="50" ref="title" /><br/>
+                <textarea rows="30" cols="70" placeholder="文章内容" ref="contents" />
                 <input type="submit" value="发表" />
             </form>
         )

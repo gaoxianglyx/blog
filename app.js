@@ -4,7 +4,7 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
-var comment = require('./routes/comment');
+var comments = require('./routes/comment');
 var text = require('./routes/text');
 
 var app = express();
@@ -28,13 +28,14 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.get('/', function (req, res) {
     res.render('index');
 });
-app.get('/comments', comment.list);
-app.get('/comments/:id', comment.get);  
-app.delete('/comments/:id', comment.delete,comment.list);  
-app.post('/comments', comment.add,comment.list);  
-app.put('/comments/:id', comment.update);  
+app.get('/comments/:id', comments.list);
+//app.get('/comments/:id', comment.get);  
+app.delete('/comments/:commentId/:id', comments.delete,comments.list);  
+app.post('/comments/:id', comments.add,comments.list);  
+app.put('/comments/:id', comments.update);  
 app.post('/SendText', text.add);  
-
+app.get('/TextList', text.list); 
+app.get('/TextContent/:TextId', text.content);
 // 启动一个服务，监听从8888端口进入的所有连接请求
 var server = app.listen(8888, function(){
     var host = server.address().address;

@@ -15,7 +15,8 @@ module.exports = {
         //webpack牛逼的加载器
         loaders: [
             { test: /\.js|\.jsx|\.es6$/, exclude: /node_modules/, loader: "react-hot!babel?presets[]=react,presets[]=es2015"}，
-            { test: /\.css$/, loader:["style", "css"] }
+            { test: /\.css$/, loader:["style", "css"] },
+            { test: /\.scss$/, loader: "style!css!sass" }
         ]
     },
     //其他处理方案

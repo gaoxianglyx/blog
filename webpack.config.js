@@ -9,7 +9,16 @@ module.exports = {
     },
     module: {
         loaders: [
-          { test: /\.js|\.jsx|\.es6$/, exclude: /node_modules/, loader: "babel?presets[]=react,presets[]=es2015"}
+          { test: /\.js|\.jsx|\.es6$/, exclude: /node_modules/, loader: "babel?presets[]=react,presets[]=es2015"},
+          { test: /\.scss$/, loader: "style!css!sass" },
+          {
+            test: /\.json$/,
+            loader: "json"
+          },
+          {
+            test: /\.(png|jpg|gif|woff|woff2)$/,
+            loader: 'url-loader?limit=8192'
+          }
         ]
     }
 };

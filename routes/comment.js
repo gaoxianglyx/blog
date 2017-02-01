@@ -1,10 +1,9 @@
-var comments = require('../public/data/comment').comments;  
 var mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost:27017/comments')
 var Comment = require('./schema.js');
 
 exports.list = function(req, res){  
-  Comment.find(function(err, comment) {
+  Comment.find({'TextId': req.params.id}, function(err, comment) {
     res.json(comment);  
   })
 };  
@@ -20,8 +19,8 @@ exports.get = function(req, res){
   
   
 exports.delete = function(req, res, next){
-  console.log(req.params.id);
-  Comment.remove({_id: req.params.id}, function(err,status){
+  console.log(req.params.textId);
+  Comment.remove({_id: req.params.commentId}, function(err,status){
     if(err){console.log(err)};
     next();
     }) 
@@ -48,7 +47,8 @@ exports.add = function(req, res, next){
  
   var newComment = {
     author : req.body.author,
-    text : req.body.text
+    text : req.body.text,
+    TextId : req.body.TextId
   }; 
   var NewComment = new Comment(newComment);
   NewComment.save(function(err){

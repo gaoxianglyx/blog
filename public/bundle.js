@@ -60,8 +60,11 @@
 	var CommentBox = __webpack_require__(234);
 	var Nav = __webpack_require__(237);
 	var SendText = __webpack_require__(238);
+	var List = __webpack_require__(239);
+	var TextContent = __webpack_require__(240);
+	var GalleryByReactApp = __webpack_require__(241);
 
-	__webpack_require__(239);
+	__webpack_require__(247);
 	var comment = React.createElement(CommentBox, { url: '/comments' });
 	/*ReactDOM.render(
 	    <CommentBox url="/comments"/>,
@@ -73,8 +76,14 @@
 	    React.createElement(
 	        _reactRouter.Route,
 	        { path: '/', component: Nav },
-	        React.createElement(_reactRouter.IndexRoute, { component: CommentBox }),
-	        React.createElement(_reactRouter.Route, { path: 'SendText', component: SendText })
+	        React.createElement(_reactRouter.IndexRoute, { component: List }),
+	        React.createElement(
+	            _reactRouter.Route,
+	            { path: 'TextContent/:TextId', component: TextContent },
+	            React.createElement(_reactRouter.IndexRoute, { component: CommentBox })
+	        ),
+	        React.createElement(_reactRouter.Route, { path: 'SendText', component: SendText }),
+	        React.createElement(_reactRouter.Route, { path: 'Gallery', component: GalleryByReactApp })
 	    )
 	), document.getElementById('commentbox'));
 
@@ -599,8 +608,15 @@
 /* 7 */
 /***/ function(module, exports) {
 
+	/*
+	object-assign
+	(c) Sindre Sorhus
+	@license MIT
+	*/
+
 	'use strict';
 	/* eslint-disable no-unused-vars */
+	var getOwnPropertySymbols = Object.getOwnPropertySymbols;
 	var hasOwnProperty = Object.prototype.hasOwnProperty;
 	var propIsEnumerable = Object.prototype.propertyIsEnumerable;
 
@@ -621,7 +637,7 @@
 			// Detect buggy property enumeration order in older V8 versions.
 
 			// https://bugs.chromium.org/p/v8/issues/detail?id=4118
-			var test1 = new String('abc');  // eslint-disable-line
+			var test1 = new String('abc');  // eslint-disable-line no-new-wrappers
 			test1[5] = 'de';
 			if (Object.getOwnPropertyNames(test1)[0] === '5') {
 				return false;
@@ -650,7 +666,7 @@
 			}
 
 			return true;
-		} catch (e) {
+		} catch (err) {
 			// We don't expect any of the above to throw, but better to be safe.
 			return false;
 		}
@@ -670,8 +686,8 @@
 				}
 			}
 
-			if (Object.getOwnPropertySymbols) {
-				symbols = Object.getOwnPropertySymbols(from);
+			if (getOwnPropertySymbols) {
+				symbols = getOwnPropertySymbols(from);
 				for (var i = 0; i < symbols.length; i++) {
 					if (propIsEnumerable.call(from, symbols[i])) {
 						to[symbols[i]] = from[symbols[i]];
@@ -951,17 +967,6 @@
 	  }
 	};
 
-	var fiveArgumentPooler = function (a1, a2, a3, a4, a5) {
-	  var Klass = this;
-	  if (Klass.instancePool.length) {
-	    var instance = Klass.instancePool.pop();
-	    Klass.call(instance, a1, a2, a3, a4, a5);
-	    return instance;
-	  } else {
-	    return new Klass(a1, a2, a3, a4, a5);
-	  }
-	};
-
 	var standardReleaser = function (instance) {
 	  var Klass = this;
 	  !(instance instanceof Klass) ? process.env.NODE_ENV !== 'production' ? invariant(false, 'Trying to release an instance into a pool of a different type.') : _prodInvariant('25') : void 0;
@@ -1001,8 +1006,7 @@
 	  oneArgumentPooler: oneArgumentPooler,
 	  twoArgumentPooler: twoArgumentPooler,
 	  threeArgumentPooler: threeArgumentPooler,
-	  fourArgumentPooler: fourArgumentPooler,
-	  fiveArgumentPooler: fiveArgumentPooler
+	  fourArgumentPooler: fourArgumentPooler
 	};
 
 	module.exports = PooledClass;
@@ -1078,12 +1082,18 @@
 	 * will remain to ensure logic does not differ in production.
 	 */
 
-	function invariant(condition, format, a, b, c, d, e, f) {
-	  if (process.env.NODE_ENV !== 'production') {
+	var validateFormat = function validateFormat(format) {};
+
+	if (process.env.NODE_ENV !== 'production') {
+	  validateFormat = function validateFormat(format) {
 	    if (format === undefined) {
 	      throw new Error('invariant requires an error message argument');
 	    }
-	  }
+	  };
+	}
+
+	function invariant(condition, format, a, b, c, d, e, f) {
+	  validateFormat(format);
 
 	  if (!condition) {
 	    var error;
@@ -3336,7 +3346,14 @@
 	    // We warn in this case but don't throw. We expect the element creation to
 	    // succeed and there will likely be errors in render.
 	    if (!validType) {
-	      process.env.NODE_ENV !== 'production' ? warning(false, 'React.createElement: type should not be null, undefined, boolean, or ' + 'number. It should be a string (for DOM elements) or a ReactClass ' + '(for composite components).%s', getDeclarationErrorAddendum()) : void 0;
+	      if (typeof type !== 'function' && typeof type !== 'string') {
+	        var info = '';
+	        if (type === undefined || typeof type === 'object' && type !== null && Object.keys(type).length === 0) {
+	          info += ' You likely forgot to export your component from the file ' + 'it\'s defined in.';
+	        }
+	        info += getDeclarationErrorAddendum();
+	        process.env.NODE_ENV !== 'production' ? warning(false, 'React.createElement: type is invalid -- expected a string (for ' + 'built-in components) or a class/function (for composite ' + 'components) but got: %s.%s', type == null ? type : typeof type, info) : void 0;
+	      }
 	    }
 
 	    var element = ReactElement.createElement.apply(this, arguments);
@@ -4307,7 +4324,7 @@
 
 	'use strict';
 
-	module.exports = '15.4.1';
+	module.exports = '15.4.2';
 
 /***/ },
 /* 34 */
@@ -4415,7 +4432,7 @@
 
 	  var match = void 0,
 	      lastIndex = 0,
-	      matcher = /:([a-zA-Z_$][a-zA-Z0-9_$]*)|\*\*|\*|\(|\)/g;
+	      matcher = /:([a-zA-Z_$][a-zA-Z0-9_$]*)|\*\*|\*|\(|\)|\\\(|\\\)/g;
 	  while (match = matcher.exec(pattern)) {
 	    if (match.index !== lastIndex) {
 	      tokens.push(pattern.slice(lastIndex, match.index));
@@ -4435,6 +4452,10 @@
 	      regexpSource += '(?:';
 	    } else if (match[0] === ')') {
 	      regexpSource += ')?';
+	    } else if (match[0] === '\\(') {
+	      regexpSource += '\\(';
+	    } else if (match[0] === '\\)') {
+	      regexpSource += '\\)';
 	    }
 
 	    tokens.push(match[0]);
@@ -4589,6 +4610,10 @@
 	      parenCount -= 1;
 
 	      if (parenCount) parenHistory[parenCount - 1] += parenText;else pathname += parenText;
+	    } else if (token === '\\(') {
+	      pathname += '(';
+	    } else if (token === '\\)') {
+	      pathname += ')';
 	    } else if (token.charAt(0) === ':') {
 	      paramName = token.substring(1);
 	      paramValue = params[paramName];
@@ -4799,7 +4824,7 @@
 	        children = _props.children;
 
 
-	    !history.getCurrentLocation ? process.env.NODE_ENV !== 'production' ? (0, _invariant2.default)(false, 'You have provided a history object created with history v2.x or ' + 'earlier. This version of React Router is only compatible with v3 ' + 'history objects. Please upgrade to history v3.x.') : (0, _invariant2.default)(false) : void 0;
+	    !history.getCurrentLocation ? process.env.NODE_ENV !== 'production' ? (0, _invariant2.default)(false, 'You have provided a history object created with history v4.x or v2.x ' + 'and earlier. This version of React Router is only compatible with v3 ' + 'history objects. Please change to history v3.x.') : (0, _invariant2.default)(false) : void 0;
 
 	    return (0, _createTransitionManager3.default)(history, (0, _RouteUtils.createRoutes)(routes || children));
 	  },
@@ -5456,7 +5481,7 @@
 	  return runTransitionHooks(hooks.length, function (index, replace, next) {
 	    var wrappedNext = function wrappedNext() {
 	      if (enterHooks.has(hooks[index])) {
-	        next();
+	        next.apply(undefined, arguments);
 	        enterHooks.remove(hooks[index]);
 	      }
 	    };
@@ -5480,7 +5505,7 @@
 	  return runTransitionHooks(hooks.length, function (index, replace, next) {
 	    var wrappedNext = function wrappedNext() {
 	      if (changeHooks.has(hooks[index])) {
-	        next();
+	        next.apply(undefined, arguments);
 	        changeHooks.remove(hooks[index]);
 	      }
 	    };
@@ -5882,9 +5907,14 @@
 	    if ((0, _PromiseUtils.isPromise)(indexRoutesReturn)) indexRoutesReturn.then(function (indexRoute) {
 	      return callback(null, (0, _RouteUtils.createRoutes)(indexRoute)[0]);
 	    }, callback);
-	  } else if (route.childRoutes) {
-	    (function () {
-	      var pathless = route.childRoutes.filter(function (childRoute) {
+	  } else if (route.childRoutes || route.getChildRoutes) {
+	    var onChildRoutes = function onChildRoutes(error, childRoutes) {
+	      if (error) {
+	        callback(error);
+	        return;
+	      }
+
+	      var pathless = childRoutes.filter(function (childRoute) {
 	        return !childRoute.path;
 	      });
 
@@ -5900,7 +5930,12 @@
 	      }, function (err, routes) {
 	        callback(null, routes);
 	      });
-	    })();
+	    };
+
+	    var result = getChildRoutes(route, location, paramNames, paramValues, onChildRoutes);
+	    if (result) {
+	      onChildRoutes.apply(undefined, result);
+	    }
 	  } else {
 	    callback();
 	  }
@@ -5954,7 +5989,7 @@
 	    // By assumption, pattern is non-empty here, which is the prerequisite for
 	    // actually terminating a match.
 	    if (remainingPathname === '') {
-	      var _ret2 = function () {
+	      var _ret = function () {
 	        var match = {
 	          routes: [route],
 	          params: createParams(paramNames, paramValues)
@@ -5985,7 +6020,7 @@
 	        };
 	      }();
 
-	      if ((typeof _ret2 === 'undefined' ? 'undefined' : _typeof(_ret2)) === "object") return _ret2.v;
+	      if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
 	    }
 	  }
 
@@ -6563,7 +6598,7 @@
 
 	    if (router) {
 	      // If user does not specify a `to` prop, return an empty anchor tag.
-	      if (to == null) {
+	      if (!to) {
 	        return _react2.default.createElement('a', props);
 	      }
 
@@ -6680,6 +6715,10 @@
 	      var _this = this;
 
 	      var router = this.props.router || this.context.router;
+	      if (!router) {
+	        return _react2.default.createElement(WrappedComponent, this.props);
+	      }
+
 	      var params = router.params,
 	          location = router.location,
 	          routes = router.routes;
@@ -7345,6 +7384,92 @@
 	var strictUriEncode = __webpack_require__(67);
 	var objectAssign = __webpack_require__(7);
 
+	function encoderForArrayFormat(opts) {
+		switch (opts.arrayFormat) {
+			case 'index':
+				return function (key, value, index) {
+					return value === null ? [
+						encode(key, opts),
+						'[',
+						index,
+						']'
+					].join('') : [
+						encode(key, opts),
+						'[',
+						encode(index, opts),
+						']=',
+						encode(value, opts)
+					].join('');
+				};
+
+			case 'bracket':
+				return function (key, value) {
+					return value === null ? encode(key, opts) : [
+						encode(key, opts),
+						'[]=',
+						encode(value, opts)
+					].join('');
+				};
+
+			default:
+				return function (key, value) {
+					return value === null ? encode(key, opts) : [
+						encode(key, opts),
+						'=',
+						encode(value, opts)
+					].join('');
+				};
+		}
+	}
+
+	function parserForArrayFormat(opts) {
+		var result;
+
+		switch (opts.arrayFormat) {
+			case 'index':
+				return function (key, value, accumulator) {
+					result = /\[(\d*)]$/.exec(key);
+
+					key = key.replace(/\[\d*]$/, '');
+
+					if (!result) {
+						accumulator[key] = value;
+						return;
+					}
+
+					if (accumulator[key] === undefined) {
+						accumulator[key] = {};
+					}
+
+					accumulator[key][result[1]] = value;
+				};
+
+			case 'bracket':
+				return function (key, value, accumulator) {
+					result = /(\[])$/.exec(key);
+
+					key = key.replace(/\[]$/, '');
+
+					if (!result || accumulator[key] === undefined) {
+						accumulator[key] = value;
+						return;
+					}
+
+					accumulator[key] = [].concat(accumulator[key], value);
+				};
+
+			default:
+				return function (key, value, accumulator) {
+					if (accumulator[key] === undefined) {
+						accumulator[key] = value;
+						return;
+					}
+
+					accumulator[key] = [].concat(accumulator[key], value);
+				};
+		}
+	}
+
 	function encode(value, opts) {
 		if (opts.encode) {
 			return opts.strict ? strictUriEncode(value) : encodeURIComponent(value);
@@ -7353,11 +7478,29 @@
 		return value;
 	}
 
+	function keysSorter(input) {
+		if (Array.isArray(input)) {
+			return input.sort();
+		} else if (typeof input === 'object') {
+			return keysSorter(Object.keys(input)).sort(function (a, b) {
+				return Number(a) - Number(b);
+			}).map(function (key) {
+				return input[key];
+			});
+		}
+
+		return input;
+	}
+
 	exports.extract = function (str) {
 		return str.split('?')[1] || '';
 	};
 
-	exports.parse = function (str) {
+	exports.parse = function (str, opts) {
+		opts = objectAssign({arrayFormat: 'none'}, opts);
+
+		var formatter = parserForArrayFormat(opts);
+
 		// Create an object with no prototype
 		// https://github.com/sindresorhus/query-string/issues/47
 		var ret = Object.create(null);
@@ -7379,31 +7522,36 @@
 			var key = parts.shift();
 			var val = parts.length > 0 ? parts.join('=') : undefined;
 
-			key = decodeURIComponent(key);
-
 			// missing `=` should be `null`:
 			// http://w3.org/TR/2012/WD-url-20120524/#collect-url-parameters
 			val = val === undefined ? null : decodeURIComponent(val);
 
-			if (ret[key] === undefined) {
-				ret[key] = val;
-			} else if (Array.isArray(ret[key])) {
-				ret[key].push(val);
-			} else {
-				ret[key] = [ret[key], val];
-			}
+			formatter(decodeURIComponent(key), val, ret);
 		});
 
-		return ret;
+		return Object.keys(ret).sort().reduce(function (result, key) {
+			var val = ret[key];
+			if (Boolean(val) && typeof val === 'object' && !Array.isArray(val)) {
+				// Sort object keys, not values
+				result[key] = keysSorter(val);
+			} else {
+				result[key] = val;
+			}
+
+			return result;
+		}, Object.create(null));
 	};
 
 	exports.stringify = function (obj, opts) {
 		var defaults = {
 			encode: true,
-			strict: true
+			strict: true,
+			arrayFormat: 'none'
 		};
 
 		opts = objectAssign(defaults, opts);
+
+		var formatter = encoderForArrayFormat(opts);
 
 		return obj ? Object.keys(obj).sort().map(function (key) {
 			var val = obj[key];
@@ -7424,11 +7572,7 @@
 						return;
 					}
 
-					if (val2 === null) {
-						result.push(encode(key, opts));
-					} else {
-						result.push(encode(key, opts) + '=' + encode(val2, opts));
-					}
+					result.push(formatter(key, val2, result.length));
 				});
 
 				return result.join('&');
@@ -9183,6 +9327,13 @@
 	var internalInstanceKey = '__reactInternalInstance$' + Math.random().toString(36).slice(2);
 
 	/**
+	 * Check if a given node should be cached.
+	 */
+	function shouldPrecacheNode(node, nodeID) {
+	  return node.nodeType === 1 && node.getAttribute(ATTR_NAME) === String(nodeID) || node.nodeType === 8 && node.nodeValue === ' react-text: ' + nodeID + ' ' || node.nodeType === 8 && node.nodeValue === ' react-empty: ' + nodeID + ' ';
+	}
+
+	/**
 	 * Drill down (through composites and empty components) until we get a host or
 	 * host text component.
 	 *
@@ -9247,7 +9398,7 @@
 	    }
 	    // We assume the child nodes are in the same order as the child instances.
 	    for (; childNode !== null; childNode = childNode.nextSibling) {
-	      if (childNode.nodeType === 1 && childNode.getAttribute(ATTR_NAME) === String(childID) || childNode.nodeType === 8 && childNode.nodeValue === ' react-text: ' + childID + ' ' || childNode.nodeType === 8 && childNode.nodeValue === ' react-empty: ' + childID + ' ') {
+	      if (shouldPrecacheNode(childNode, childID)) {
 	        precacheNode(childInst, childNode);
 	        continue outer;
 	      }
@@ -11488,17 +11639,6 @@
 	  }
 	};
 
-	var fiveArgumentPooler = function (a1, a2, a3, a4, a5) {
-	  var Klass = this;
-	  if (Klass.instancePool.length) {
-	    var instance = Klass.instancePool.pop();
-	    Klass.call(instance, a1, a2, a3, a4, a5);
-	    return instance;
-	  } else {
-	    return new Klass(a1, a2, a3, a4, a5);
-	  }
-	};
-
 	var standardReleaser = function (instance) {
 	  var Klass = this;
 	  !(instance instanceof Klass) ? process.env.NODE_ENV !== 'production' ? invariant(false, 'Trying to release an instance into a pool of a different type.') : _prodInvariant('25') : void 0;
@@ -11538,8 +11678,7 @@
 	  oneArgumentPooler: oneArgumentPooler,
 	  twoArgumentPooler: twoArgumentPooler,
 	  threeArgumentPooler: threeArgumentPooler,
-	  fourArgumentPooler: fourArgumentPooler,
-	  fiveArgumentPooler: fiveArgumentPooler
+	  fourArgumentPooler: fourArgumentPooler
 	};
 
 	module.exports = PooledClass;
@@ -16357,12 +16496,18 @@
 	    } else {
 	      var contentToUse = CONTENT_TYPES[typeof props.children] ? props.children : null;
 	      var childrenToUse = contentToUse != null ? null : props.children;
+	      // TODO: Validate that text is allowed as a child of this node
 	      if (contentToUse != null) {
-	        // TODO: Validate that text is allowed as a child of this node
-	        if (process.env.NODE_ENV !== 'production') {
-	          setAndValidateContentChildDev.call(this, contentToUse);
+	        // Avoid setting textContent when the text is empty. In IE11 setting
+	        // textContent on a text area will cause the placeholder to not
+	        // show within the textarea until it has been focused and blurred again.
+	        // https://github.com/facebook/react/issues/6731#issuecomment-254874553
+	        if (contentToUse !== '') {
+	          if (process.env.NODE_ENV !== 'production') {
+	            setAndValidateContentChildDev.call(this, contentToUse);
+	          }
+	          DOMLazyTree.queueText(lazyTree, contentToUse);
 	        }
-	        DOMLazyTree.queueText(lazyTree, contentToUse);
 	      } else if (childrenToUse != null) {
 	        var mountImages = this.mountChildren(childrenToUse, transaction, context);
 	        for (var i = 0; i < mountImages.length; i++) {
@@ -18282,7 +18427,17 @@
 	      }
 	    } else {
 	      if (props.value == null && props.defaultValue != null) {
-	        node.defaultValue = '' + props.defaultValue;
+	        // In Chrome, assigning defaultValue to certain input types triggers input validation.
+	        // For number inputs, the display value loses trailing decimal points. For email inputs,
+	        // Chrome raises "The specified value <x> is not a valid email address".
+	        //
+	        // Here we check to see if the defaultValue has actually changed, avoiding these problems
+	        // when the user is inputting text
+	        //
+	        // https://github.com/facebook/react/issues/7253
+	        if (node.defaultValue !== '' + props.defaultValue) {
+	          node.defaultValue = '' + props.defaultValue;
+	        }
 	      }
 	      if (props.checked == null && props.defaultChecked != null) {
 	        node.defaultChecked = !!props.defaultChecked;
@@ -19029,9 +19184,15 @@
 	    // This is in postMount because we need access to the DOM node, which is not
 	    // available until after the component has mounted.
 	    var node = ReactDOMComponentTree.getNodeFromInstance(inst);
+	    var textContent = node.textContent;
 
-	    // Warning: node.value may be the empty string at this point (IE11) if placeholder is set.
-	    node.value = node.textContent; // Detach value from defaultValue
+	    // Only set node.value if textContent is equal to the expected
+	    // initial value. In IE10/IE11 there is a bug where the placeholder attribute
+	    // will populate textContent as well.
+	    // https://developer.microsoft.com/microsoft-edge/platform/issues/101525/
+	    if (textContent === inst._wrapperState.initialValue) {
+	      node.value = textContent;
+	    }
 	  }
 	};
 
@@ -19833,7 +19994,17 @@
 	    instance = ReactEmptyComponent.create(instantiateReactComponent);
 	  } else if (typeof node === 'object') {
 	    var element = node;
-	    !(element && (typeof element.type === 'function' || typeof element.type === 'string')) ? process.env.NODE_ENV !== 'production' ? invariant(false, 'Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: %s.%s', element.type == null ? element.type : typeof element.type, getDeclarationErrorAddendum(element._owner)) : _prodInvariant('130', element.type == null ? element.type : typeof element.type, getDeclarationErrorAddendum(element._owner)) : void 0;
+	    var type = element.type;
+	    if (typeof type !== 'function' && typeof type !== 'string') {
+	      var info = '';
+	      if (process.env.NODE_ENV !== 'production') {
+	        if (type === undefined || typeof type === 'object' && type !== null && Object.keys(type).length === 0) {
+	          info += ' You likely forgot to export your component from the file ' + 'it\'s defined in.';
+	        }
+	      }
+	      info += getDeclarationErrorAddendum(element._owner);
+	       true ? process.env.NODE_ENV !== 'production' ? invariant(false, 'Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: %s.%s', type == null ? type : typeof type, info) : _prodInvariant('130', type == null ? type : typeof type, info) : void 0;
+	    }
 
 	    // Special case string values
 	    if (typeof element.type === 'string') {
@@ -20123,7 +20294,7 @@
 	      // Since plain JS classes are defined without any special initialization
 	      // logic, we can not catch common errors early. Therefore, we have to
 	      // catch them here, at initialization time, instead.
-	      process.env.NODE_ENV !== 'production' ? warning(!inst.getInitialState || inst.getInitialState.isReactClassApproved, 'getInitialState was defined on %s, a plain JavaScript class. ' + 'This is only supported for classes created using React.createClass. ' + 'Did you mean to define a state property instead?', this.getName() || 'a component') : void 0;
+	      process.env.NODE_ENV !== 'production' ? warning(!inst.getInitialState || inst.getInitialState.isReactClassApproved || inst.state, 'getInitialState was defined on %s, a plain JavaScript class. ' + 'This is only supported for classes created using React.createClass. ' + 'Did you mean to define a state property instead?', this.getName() || 'a component') : void 0;
 	      process.env.NODE_ENV !== 'production' ? warning(!inst.getDefaultProps || inst.getDefaultProps.isReactClassApproved, 'getDefaultProps was defined on %s, a plain JavaScript class. ' + 'This is only supported for classes created using React.createClass. ' + 'Use a static property to define defaultProps instead.', this.getName() || 'a component') : void 0;
 	      process.env.NODE_ENV !== 'production' ? warning(!inst.propTypes, 'propTypes was defined as an instance property on %s. Use a static ' + 'property to define propTypes instead.', this.getName() || 'a component') : void 0;
 	      process.env.NODE_ENV !== 'production' ? warning(!inst.contextTypes, 'contextTypes was defined as an instance property on %s. Use a ' + 'static property to define contextTypes instead.', this.getName() || 'a component') : void 0;
@@ -21127,14 +21298,11 @@
 
 	'use strict';
 
-	var _prodInvariant = __webpack_require__(91),
-	    _assign = __webpack_require__(7);
+	var _prodInvariant = __webpack_require__(91);
 
 	var invariant = __webpack_require__(11);
 
 	var genericComponentClass = null;
-	// This registry keeps track of wrapper classes around host tags.
-	var tagToComponentClass = {};
 	var textComponentClass = null;
 
 	var ReactHostComponentInjection = {
@@ -21147,11 +21315,6 @@
 	  // rendered as props.
 	  injectTextComponentClass: function (componentClass) {
 	    textComponentClass = componentClass;
-	  },
-	  // This accepts a keyed object with classes as values. Each key represents a
-	  // tag. That particular tag will use this class instead of the generic one.
-	  injectComponentClasses: function (componentClasses) {
-	    _assign(tagToComponentClass, componentClasses);
 	  }
 	};
 
@@ -26006,7 +26169,7 @@
 
 	'use strict';
 
-	module.exports = '15.4.1';
+	module.exports = '15.4.2';
 
 /***/ },
 /* 228 */
@@ -26453,12 +26616,12 @@
 	                    { className: 'commentAuthor' },
 	                    this.props.author
 	                ),
-	                _react2.default.createElement('span', { dangerouslySetInnerHTML: this.rawMarkup() }),
 	                _react2.default.createElement(
 	                    'button',
 	                    { className: 'delate', onClick: this.onclick.bind(this) },
 	                    '\u5220\u9664'
-	                )
+	                ),
+	                _react2.default.createElement('span', { dangerouslySetInnerHTML: this.rawMarkup() })
 	            );
 	        }
 	    }]);
@@ -26524,7 +26687,7 @@
 	            if (!text || !author) {
 	                return;
 	            }
-	            this.props.onCommentSubmit({ author: author, text: text });
+	            this.props.onCommentSubmit({ author: author, text: text, TextId: window.location.hash.substring(14) });
 	            this.refs.author.value = '';
 	            this.refs.text.value = '';
 	            return;
@@ -26555,6 +26718,7 @@
 
 	        var _this5 = _possibleConstructorReturn(this, (CommentBox.__proto__ || Object.getPrototypeOf(CommentBox)).call(this, props));
 
+	        _this5.id = window.location.hash.substring(14);
 	        _this5.state = {
 	            data: []
 	        };
@@ -26566,7 +26730,7 @@
 	        value: function deleteClick(index) {
 	            var _this6 = this;
 
-	            var url = '/comments/' + index;
+	            var url = '/comments/' + index + '/' + this.id;
 	            _jquery2.default.ajax({
 	                url: url,
 	                type: 'delete',
@@ -26581,14 +26745,14 @@
 	            var _this7 = this;
 
 	            _jquery2.default.ajax({
-	                url: '/comments',
+	                url: '/comments/' + this.id,
 	                dataType: 'json',
-	                cache: false,
+	                type: 'GET',
 	                success: function success(data) {
 	                    _this7.setState({ data: data });
 	                },
 	                error: function error(xhr, status, err) {
-	                    console.error(comment, status, err.toString());
+	                    console.error(status, err.toString());
 	                }
 	            });
 	        }
@@ -26601,7 +26765,7 @@
 	            var newComments = comments.concat([comment]);
 	            this.setState({ data: newComments });
 	            _jquery2.default.ajax({
-	                url: this.props.url,
+	                url: '/comments/' + this.id,
 	                dataType: 'json',
 	                type: 'POST',
 	                data: comment,
@@ -26626,9 +26790,9 @@
 	                'div',
 	                { className: 'commentBox' },
 	                _react2.default.createElement(
-	                    'h1',
+	                    'h2',
 	                    null,
-	                    '\u6211\u7684\u7559\u8A00\u677F'
+	                    '\u8BF7\u7559\u8A00'
 	                ),
 	                _react2.default.createElement(CommentList, { data: this.state.data, 'delete': this.deleteClick.bind(this) }),
 	                _react2.default.createElement(CommentForm, { onCommentSubmit: this.handleCommentSubmit.bind(this) })
@@ -38200,51 +38364,55 @@
 	                'div',
 	                null,
 	                _react2.default.createElement(
-	                    'ul',
+	                    'nav',
 	                    null,
 	                    _react2.default.createElement(
-	                        'li',
+	                        'ul',
 	                        null,
 	                        _react2.default.createElement(
-	                            _reactRouter.Link,
-	                            { to: '/' },
-	                            '\u535A\u6587\u5217\u8868'
-	                        )
-	                    ),
-	                    _react2.default.createElement(
-	                        'li',
-	                        null,
+	                            'li',
+	                            null,
+	                            _react2.default.createElement(
+	                                _reactRouter.Link,
+	                                { to: '/' },
+	                                '\u535A\u6587\u5217\u8868'
+	                            )
+	                        ),
 	                        _react2.default.createElement(
-	                            _reactRouter.Link,
-	                            { to: 'SendText' },
-	                            '\u53D1\u8868\u535A\u6587'
-	                        )
-	                    ),
-	                    _react2.default.createElement(
-	                        'li',
-	                        null,
+	                            'li',
+	                            null,
+	                            _react2.default.createElement(
+	                                _reactRouter.Link,
+	                                { to: 'SendText' },
+	                                '\u53D1\u8868\u535A\u6587'
+	                            )
+	                        ),
 	                        _react2.default.createElement(
-	                            _reactRouter.Link,
-	                            { to: '/' },
-	                            '\u7B80\u5386'
-	                        )
-	                    ),
-	                    _react2.default.createElement(
-	                        'li',
-	                        null,
+	                            'li',
+	                            null,
+	                            _react2.default.createElement(
+	                                _reactRouter.Link,
+	                                { to: '/' },
+	                                '\u7B80\u5386'
+	                            )
+	                        ),
 	                        _react2.default.createElement(
-	                            _reactRouter.Link,
-	                            { to: '/' },
-	                            '\u6444\u5F71\u96C6'
-	                        )
-	                    ),
-	                    _react2.default.createElement(
-	                        'li',
-	                        null,
+	                            'li',
+	                            null,
+	                            _react2.default.createElement(
+	                                _reactRouter.Link,
+	                                { to: 'Gallery' },
+	                                '\u6444\u5F71\u96C6'
+	                            )
+	                        ),
 	                        _react2.default.createElement(
-	                            _reactRouter.Link,
-	                            { to: '/' },
-	                            '\u5173\u4E8E\u6211'
+	                            'li',
+	                            null,
+	                            _react2.default.createElement(
+	                                'a',
+	                                { href: 'http://gaoxianglyx.top' },
+	                                '\u5173\u4E8E\u6211'
+	                            )
 	                        )
 	                    )
 	                ),
@@ -38322,10 +38490,10 @@
 	        value: function render() {
 	            return _react2.default.createElement(
 	                'form',
-	                { className: 'TextForm', onSubmit: this.handleSubmit.bind(this) },
-	                _react2.default.createElement('input', { type: 'text', placeholder: '\u6807\u9898', ref: 'title' }),
+	                { className: 'textForm', onSubmit: this.handleSubmit.bind(this) },
+	                _react2.default.createElement('input', { type: 'text', placeholder: '\u6807\u9898', size: '50', ref: 'title' }),
 	                _react2.default.createElement('br', null),
-	                _react2.default.createElement('textarea', { rows: '10', cols: '30', placeholder: '\u6587\u7AE0\u5185\u5BB9', ref: 'contents' }),
+	                _react2.default.createElement('textarea', { rows: '30', cols: '70', placeholder: '\u6587\u7AE0\u5185\u5BB9', ref: 'contents' }),
 	                _react2.default.createElement('input', { type: 'submit', value: '\u53D1\u8868' })
 	            );
 	        }
@@ -38341,20 +38509,563 @@
 /* 239 */
 /***/ function(module, exports, __webpack_require__) {
 
+	'use strict';
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _react = __webpack_require__(4);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _reactDom = __webpack_require__(88);
+
+	var _reactDom2 = _interopRequireDefault(_reactDom);
+
+	var _jquery = __webpack_require__(236);
+
+	var _jquery2 = _interopRequireDefault(_jquery);
+
+	var _reactRouter = __webpack_require__(2);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	/*
+	$.ajax({
+	  url: '/TextList',
+	  dataType: 'json',
+	  cache: false,
+	  success : (data) => {
+	   var  List = React.createClass({
+	        render: function () {
+	            return 
+	                <ul>
+	                    {this.data.map((text) => {
+	                        return (
+	                          <li><Link to ="/TextContent/text._id">text.title</Link></li>
+	                        )
+	                    })}                                                                                              
+	                </ul>
+	             ;
+	        }
+	    });
+	   module.exports = List;
+	    }
+	});*/
+
+	var List = function (_React$Component) {
+	    _inherits(List, _React$Component);
+
+	    function List(props) {
+	        _classCallCheck(this, List);
+
+	        var _this = _possibleConstructorReturn(this, (List.__proto__ || Object.getPrototypeOf(List)).call(this, props));
+
+	        _this.state = {
+	            data: []
+	        };
+	        return _this;
+	    }
+
+	    _createClass(List, [{
+	        key: 'componentDidMount',
+	        value: function componentDidMount() {
+	            var _this2 = this;
+
+	            _jquery2.default.ajax({
+	                url: '/TextList',
+	                dataType: 'json',
+	                success: function success(data) {
+	                    _this2.setState({ data: data });
+	                }
+	            });
+	        }
+	    }, {
+	        key: 'render',
+	        value: function render() {
+	            return _react2.default.createElement(
+	                'ul',
+	                { className: 'textList', ref: 'list' },
+	                this.state.data.map(function (text) {
+	                    var url = '/TextContent/' + text._id;
+	                    var time = text.meta.createAt.slice(0, 10);
+	                    return _react2.default.createElement(
+	                        'li',
+	                        null,
+	                        _react2.default.createElement(
+	                            _reactRouter.Link,
+	                            { to: url },
+	                            text.title
+	                        ),
+	                        _react2.default.createElement(
+	                            'p',
+	                            null,
+	                            time
+	                        )
+	                    );
+	                })
+	            );
+	        }
+	    }]);
+
+	    return List;
+	}(_react2.default.Component);
+
+	;
+	module.exports = List;
+
+/***/ },
+/* 240 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _react = __webpack_require__(4);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _reactDom = __webpack_require__(88);
+
+	var _reactDom2 = _interopRequireDefault(_reactDom);
+
+	var _jquery = __webpack_require__(236);
+
+	var _jquery2 = _interopRequireDefault(_jquery);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var TextContent = function (_React$Component) {
+	    _inherits(TextContent, _React$Component);
+
+	    function TextContent() {
+	        _classCallCheck(this, TextContent);
+
+	        return _possibleConstructorReturn(this, (TextContent.__proto__ || Object.getPrototypeOf(TextContent)).apply(this, arguments));
+	    }
+
+	    _createClass(TextContent, [{
+	        key: 'render',
+	        value: function render() {
+	            var _this2 = this;
+
+	            var title = '',
+	                content = '';
+	            var url = '/TextContent/' + this.props.params.TextId;
+	            _jquery2.default.ajax({
+	                url: '/TextContent/' + this.props.params.TextId,
+	                dataType: 'json',
+	                cache: false,
+	                success: function success(data) {
+	                    _this2.refs.title.innerHTML = data[0].title;
+	                    _this2.refs.content.innerHTML = data[0].contents;
+	                }
+	            });
+	            return _react2.default.createElement(
+	                'div',
+	                { className: 'textContent' },
+	                _react2.default.createElement('h1', { ref: 'title' }),
+	                _react2.default.createElement('p', { ref: 'content' }),
+	                this.props.children
+	            );
+	        }
+	    }]);
+
+	    return TextContent;
+	}(_react2.default.Component);
+
+	module.exports = TextContent;
+
+/***/ },
+/* 241 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _react = __webpack_require__(4);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _reactDom = __webpack_require__(88);
+
+	var _reactDom2 = _interopRequireDefault(_reactDom);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	//require('normalize.css/normalize.css');
+	__webpack_require__(242);
+
+	var imageDatas = __webpack_require__(246);
+
+	//定义一个函数遍历图片文件名，自执行来把文件信息转化成URL路径信息
+	imageDatas = function (imageDatasArr) {
+	    for (var i = 0, j = imageDatasArr.length; i < j; i++) {
+	        var singleImageData = imageDatasArr[i];
+	        console.log(singleImageData.fileName);
+	        singleImageData.imageURL = '../images/' + singleImageData.fileName;
+	        console.log(singleImageData.imageURL);
+	        imageDatasArr[i] = singleImageData;
+	    }
+	    return imageDatasArr;
+	}(imageDatas);
+
+	//获取区间内的一个随机值
+	var getRangeRandom = function getRangeRandom(low, high) {
+	    return Math.floor(Math.random() * (high - low) + low);
+	};
+
+	//获取0-30°之间一个任意正负值
+	var get30DegRandom = function get30DegRandom() {
+	    var deg = '';
+	    deg = Math.random() > 0.5 ? '+' : '-';
+	    return deg + Math.ceil(Math.random() * 30);
+	};
+
+	//定义一个图片组件
+
+	var ImgFigure = function (_React$Component) {
+	    _inherits(ImgFigure, _React$Component);
+
+	    function ImgFigure(props) {
+	        _classCallCheck(this, ImgFigure);
+
+	        var _this = _possibleConstructorReturn(this, (ImgFigure.__proto__ || Object.getPrototypeOf(ImgFigure)).call(this, props));
+
+	        _this.handleClick = _this.handleClick.bind(_this);return _this;
+	    }
+
+	    //点击翻转的函数
+
+
+	    _createClass(ImgFigure, [{
+	        key: 'handleClick',
+	        value: function handleClick(e) {
+	            if (this.props.arrange.isCenter) {
+	                this.props.inverse();
+	            } else {
+	                this.props.center();
+	            }
+	            e.stopPropagation();
+	            e.preventDefault();
+	        }
+	    }, {
+	        key: 'render',
+	        value: function render() {
+	            var _this2 = this;
+
+	            var styleObj = {};
+	            //如果props属性中指定了这张图片的位置,则使用
+	            if (this.props.arrange.pos) {
+	                styleObj = this.props.arrange.pos;
+	            }
+	            //如果图片的旋转角度不为0 ，旋转
+	            if (this.props.arrange.rotate) {
+	                (function () {
+	                    var rotate = _this2.props.arrange.rotate;
+	                    ['MozTransform', 'msTransform', 'WebkitTransform', 'transform'].forEach(function (value) {
+	                        styleObj[value] = 'rotate(' + rotate + 'deg)';
+	                    });
+	                })();
+	            }
+
+	            //设置中心图片的zIndex,使其不被其他遮住
+	            if (this.props.arrange.isCenter) {
+	                styleObj.zIndex = 11;
+	            }
+
+	            var imgFigureClassName = 'img-figure';
+	            imgFigureClassName += this.props.arrange.isInverse ? ' is-inverse ' : '';
+
+	            return _react2.default.createElement(
+	                'figure',
+	                { className: imgFigureClassName, style: styleObj, onClick: this.handleClick },
+	                _react2.default.createElement('img', { src: this.props.data.imageURL }),
+	                _react2.default.createElement(
+	                    'figcaption',
+	                    null,
+	                    _react2.default.createElement(
+	                        'h2',
+	                        { className: 'img-title' },
+	                        this.props.data.title
+	                    ),
+	                    _react2.default.createElement(
+	                        'div',
+	                        { className: 'img-back', onClick: this.handleClick },
+	                        _react2.default.createElement(
+	                            'p',
+	                            null,
+	                            this.props.data.desc
+	                        )
+	                    )
+	                )
+	            );
+	        }
+	    }]);
+
+	    return ImgFigure;
+	}(_react2.default.Component);
+
+	var GalleryByReactApp = function (_React$Component2) {
+	    _inherits(GalleryByReactApp, _React$Component2);
+
+	    function GalleryByReactApp(props) {
+	        _classCallCheck(this, GalleryByReactApp);
+
+	        var _this3 = _possibleConstructorReturn(this, (GalleryByReactApp.__proto__ || Object.getPrototypeOf(GalleryByReactApp)).call(this, props));
+
+	        _this3.Constant = {
+	            centerPos: {
+	                left: 0,
+	                right: 0
+	            },
+	            //水平方向的取值范围
+	            hPosRange: {
+	                leftSecX: [0, 0],
+	                rightSecX: [0, 0],
+	                y: [0, 0]
+	            },
+	            vPosRange: { //垂直方向
+	                x: [0, 0],
+	                topY: [0, 0]
+	            }
+	        };
+	        _this3.state = {
+	            imgsArrangeArr: [
+	                /*{
+	                    pos:{
+	                        left: 0,
+	                        top: 0
+	                    },
+	                    rotate: 0,//旋转角度
+	                    isInverse: false//图片正反面
+	                    isCenter:false 图片是否居中
+	                }*/
+	            ]
+	        };
+	        return _this3;
+	    }
+
+	    //翻转图片(return闭包函数，index-》当前被翻转图片的index)
+
+
+	    _createClass(GalleryByReactApp, [{
+	        key: 'inverse',
+	        value: function inverse(index) {
+	            var _this4 = this;
+
+	            return function () {
+	                var imgsArrangArr = _this4.state.imgsArrangeArr;
+	                imgsArrangArr[index].isInverse = !imgsArrangArr[index].isInverse;
+	                _this4.setState({
+	                    imgsArrangeArr: imgsArrangArr
+	                });
+	            };
+	        }
+
+	        /*利用rearrange函数
+	        *居中对应index的图片
+	        *
+	        */
+
+	    }, {
+	        key: 'center',
+	        value: function center(index) {
+	            var _this5 = this;
+
+	            return function () {
+	                _this5.rearrange(index);
+	            };
+	        }
+
+	        //重新布局所有图片，centerIndex指定 中间排布哪个图片
+
+	    }, {
+	        key: 'rearrange',
+	        value: function rearrange(centerIndex) {
+	            var imgsArrangeArr = this.state.imgsArrangeArr,
+	                Constant = this.Constant,
+	                centerPos = Constant.centerPos,
+	                hPosRange = Constant.hPosRange,
+	                vPosRange = Constant.vPosRange,
+	                hPosRangeLeftSecX = hPosRange.leftSecX,
+	                hPosRangeRightSecX = hPosRange.rightSecX,
+	                hPosRangeY = hPosRange.y,
+	                vPosRangeTopY = vPosRange.topY,
+	                vPosRangeX = vPosRange.x,
+	                topImgNum = Math.floor(Math.random() * 2),
+	                //取一个或者不取
+	            topImgSpiceIndex = 0,
+	                imgsArrangeCenterArr = imgsArrangeArr.splice(centerIndex, 1);
+	            //首先居中centerIndex图片 ,centerIndex图片不需要旋转
+	            imgsArrangeCenterArr[0] = {
+	                pos: centerPos,
+	                rotate: 0,
+	                isCenter: true
+	            };
+	            //取出要布局上测的图片的状态信息(先随意选一张图片作为顶部图片，然后取出来)
+	            topImgSpiceIndex = Math.floor(Math.random() * (imgsArrangeArr.length - topImgNum));
+	            var imgsArrangTopArr = imgsArrangeArr.splice(topImgSpiceIndex, topImgNum);
+	            //布局位于上侧的图片
+	            imgsArrangTopArr.forEach(function (value, index) {
+	                imgsArrangTopArr[index] = {
+	                    pos: {
+	                        top: getRangeRandom(vPosRangeTopY[0], vPosRangeTopY[1]),
+	                        left: getRangeRandom(vPosRangeX[0], vPosRangeX[1])
+	                    },
+	                    rotate: get30DegRandom(),
+	                    isCenter: false
+
+	                };
+	            });
+	            //布局左两侧的图片
+	            for (var i = 0, j = imgsArrangeArr.length, k = j / 2; i < j; i++) {
+	                var hPosRangeLORX = null;
+
+	                //前半部分布局左边,右边部分布局右边
+	                if (i < k) {
+	                    hPosRangeLORX = hPosRangeLeftSecX;
+	                } else {
+	                    hPosRangeLORX = hPosRangeRightSecX;
+	                }
+	                imgsArrangeArr[i] = {
+	                    pos: {
+	                        top: getRangeRandom(hPosRangeY[0], hPosRangeY[1]),
+	                        left: getRangeRandom(hPosRangeLORX[0], hPosRangeLORX[1])
+	                    },
+	                    rotate: get30DegRandom(),
+	                    isCenter: false
+	                };
+	            }
+	            if (imgsArrangTopArr && imgsArrangTopArr[0]) {
+	                imgsArrangeArr.splice(topImgSpiceIndex, 0, imgsArrangTopArr[0]);
+	            }
+	            imgsArrangeArr.splice(centerIndex, 0, imgsArrangeCenterArr[0]);
+	            this.setState({
+	                imgsArrangeArr: imgsArrangeArr
+	            });
+	        }
+	    }, {
+	        key: 'componentDidMount',
+	        value: function componentDidMount() {
+	            //获取舞台对象和对象的参数
+	            var stageDOM = _reactDom2.default.findDOMNode(this.refs.stage),
+	                stageW = stageDOM.scrollWidth,
+	                stageH = stageDOM.scrollHeight,
+	                halfStageW = Math.ceil(stageW / 2),
+	                halfStageH = Math.ceil(stageH / 2);
+
+	            //拿到一个imgFigure的大小
+
+	            var imgFigureDOM = _reactDom2.default.findDOMNode(this.refs.imgFigures0),
+	                imgW = imgFigureDOM.scrollWidth,
+	                imgH = imgFigureDOM.scrollHeight,
+	                halfImgW = Math.ceil(imgW / 2),
+	                halfImgH = Math.ceil(imgH / 2);
+
+	            //计算中心图片的位置点
+	            this.Constant.centerPos = {
+	                left: halfStageW - halfImgW,
+	                top: halfStageH - halfImgH
+	            };
+	            //计算左侧,右侧区域图片排布的取值范围
+	            this.Constant.hPosRange.leftSecX[0] = -halfImgW;
+	            this.Constant.hPosRange.leftSecX[1] = halfStageW - halfImgW * 3;
+	            this.Constant.hPosRange.rightSecX[0] = halfStageW + halfImgW;
+	            this.Constant.hPosRange.rightSecX[1] = stageW - halfImgW;
+	            this.Constant.hPosRange.y[0] = -halfImgH;
+	            this.Constant.hPosRange.y[1] = stageH - halfImgH;
+	            this.Constant.vPosRange.topY[0] = -halfImgH;
+	            this.Constant.vPosRange.topY[1] = halfStageH - halfImgH * 3;
+	            this.Constant.vPosRange.x[0] = halfStageW - imgW;
+	            this.Constant.vPosRange.x[1] = halfStageW;
+	            var num = Math.floor(Math.random() * 10);
+	            this.rearrange(num);
+	        }
+	    }, {
+	        key: 'render',
+	        value: function render() {
+	            var _this6 = this;
+
+	            var imgFigures = [];
+	            imageDatas.forEach(function (value, index) {
+	                if (!_this6.state.imgsArrangeArr[index]) {
+	                    _this6.state.imgsArrangeArr[index] = {
+	                        pos: {
+	                            left: 0,
+	                            top: 0
+	                        },
+	                        rotate: 0,
+	                        isInverse: false,
+	                        isCenter: false
+	                    };
+	                }
+	                imgFigures.push(_react2.default.createElement(ImgFigure, {
+	                    data: value,
+	                    key: index,
+	                    ref: 'imgFigures' + index,
+	                    arrange: _this6.state.imgsArrangeArr[index],
+	                    inverse: _this6.inverse(index),
+	                    center: _this6.center(index) }));
+	            });
+	            return _react2.default.createElement(
+	                'section',
+	                { className: 'stage', ref: 'stage', id: 'stage' },
+	                _react2.default.createElement(
+	                    'section',
+	                    { className: 'img-sec' },
+	                    imgFigures
+	                )
+	            );
+	        }
+	    }]);
+
+	    return GalleryByReactApp;
+	}(_react2.default.Component);
+
+	//符合common.js规范的引入方式，每个文件是一个模块，每个模块是一个作用域
+
+	GalleryByReactApp.defaultProps = {};
+
+	module.exports = GalleryByReactApp;
+
+/***/ },
+/* 242 */
+/***/ function(module, exports, __webpack_require__) {
+
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 
 	// load the styles
-	var content = __webpack_require__(240);
+	var content = __webpack_require__(243);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
-	var update = __webpack_require__(242)(content, {});
+	var update = __webpack_require__(245)(content, {});
 	if(content.locals) module.exports = content.locals;
 	// Hot Module Replacement
 	if(false) {
 		// When the styles change, update the <style> tags
 		if(!content.locals) {
-			module.hot.accept("!!./../../node_modules/.0.26.1@css-loader/index.js!./style.css", function() {
-				var newContent = require("!!./../../node_modules/.0.26.1@css-loader/index.js!./style.css");
+			module.hot.accept("!!./../../node_modules/.0.26.1@css-loader/index.js!./../../node_modules/sass-loader/index.js!./App.scss", function() {
+				var newContent = require("!!./../../node_modules/.0.26.1@css-loader/index.js!./../../node_modules/sass-loader/index.js!./App.scss");
 				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 				update(newContent);
 			});
@@ -38364,21 +39075,21 @@
 	}
 
 /***/ },
-/* 240 */
+/* 243 */
 /***/ function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(241)();
+	exports = module.exports = __webpack_require__(244)();
 	// imports
 
 
 	// module
-	exports.push([module.id, "h1{color:red}", ""]);
+	exports.push([module.id, "html, body {\n  background-color: #ddd;\n  width: 100%;\n  height: 100%; }\n\n.content {\n  width: 100%;\n  height: 100%; }\n\n.stage {\n  position: absolute;\n  margin-top: -24px;\n  width: 100%;\n  height: 100%; }\n\n.img-sec {\n  position: relative;\n  background-color: #ddd;\n  overflow: hidden;\n  perspective: 1800px;\n  width: 100%;\n  height: 100%; }\n  .img-figure {\n    position: absolute;\n    width: 320px;\n    height: 360px;\n    margin: 0;\n    padding: 40px;\n    box-sizing: border-box;\n    background-color: #fff;\n    cursor: pointer;\n    transform-origin: 0 50% 0;\n    transform-style: preserve-3d;\n    transition: transform .6s ease-in-out, left .6s ease-in-out, top .6s ease-in-out; }\n    .img-figure.is-inverse {\n      transform: translate(320px) rotateY(180deg); }\n  .img-back {\n    position: absolute;\n    left: 0;\n    top: 0;\n    width: 100%;\n    height: 100%;\n    padding: 30px;\n    box-sizing: border-box;\n    text-align: center;\n    color: #666;\n    transform: rotateY(180deg) translateZ(1px);\n    backface-visibility: hidden;\n    background: #fff; }\n  figcaption {\n    text-align: center; }\n    figcaption .img-title {\n      margin: 20px 0 0 0;\n      color: #a7a0a2;\n      font-size: 16px; }\n\n.controller-nav {\n  position: absolute;\n  left: 0;\n  bottom: 20px;\n  z-index: 101;\n  width: 100%;\n  text-align: center; }\n", ""]);
 
 	// exports
 
 
 /***/ },
-/* 241 */
+/* 244 */
 /***/ function(module, exports) {
 
 	/*
@@ -38434,7 +39145,7 @@
 
 
 /***/ },
-/* 242 */
+/* 245 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/*
@@ -38683,6 +39394,94 @@
 		if(oldSrc)
 			URL.revokeObjectURL(oldSrc);
 	}
+
+
+/***/ },
+/* 246 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	module.exports = [{
+		"fileName": "1.jpg",
+		"title": "Help This Company",
+		"desc": "三五瓶，比两拳，打多打少是个缘"
+	}, {
+		"fileName": "2.jpg",
+		"title": "Help This Company",
+		"desc": "三五瓶，比两拳，打多打少是个缘"
+	}, {
+		"fileName": "3.jpg",
+		"title": "Help This Company",
+		"desc": "三五瓶，比两拳，打多打少是个缘"
+	}, {
+		"fileName": "4.jpg",
+		"title": "Help This Company",
+		"desc": "三五瓶，比两拳，打多打少是个缘"
+	}, {
+		"fileName": "5.jpg",
+		"title": "Help This Company",
+		"desc": "三五瓶，比两拳，打多打少是个缘"
+	}, {
+		"fileName": "6.jpg",
+		"title": "Help This Company",
+		"desc": "三五瓶，比两拳，打多打少是个缘"
+	}, {
+		"fileName": "7.jpg",
+		"title": "Help This Company",
+		"desc": "三五瓶，比两拳，打多打少是个缘"
+	}, {
+		"fileName": "8.jpg",
+		"title": "Help This Company",
+		"desc": "三五瓶，比两拳，打多打少是个缘"
+	}, {
+		"fileName": "9.jpg",
+		"title": "Help This Company",
+		"desc": "三五瓶，比两拳，打多打少是个缘"
+	}, {
+		"fileName": "10.jpg",
+		"title": "Help This Company",
+		"desc": "三五瓶，比两拳，打多打少是个缘"
+	}];
+
+/***/ },
+/* 247 */
+/***/ function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+
+	// load the styles
+	var content = __webpack_require__(248);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(245)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!./../../node_modules/.0.26.1@css-loader/index.js!./../../node_modules/sass-loader/index.js!./style.scss", function() {
+				var newContent = require("!!./../../node_modules/.0.26.1@css-loader/index.js!./../../node_modules/sass-loader/index.js!./style.scss");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ },
+/* 248 */
+/***/ function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(244)();
+	// imports
+
+
+	// module
+	exports.push([module.id, "@charset \"UTF-8\";\nhtml, body, div, span, object, iframe,\nh1, h2, h3, h4, h5, h6, p, blockquote, pre,\na, abbr, acronym, address, big, cite, code,\ndel, dfn, em, font, img, ins, kbd, q, s, samp,\nsmall, strike, strong, sub, sup, tt, var,\nb, u, i, center,\ndl, dt, dd, ol, ul, li,\nfieldset, form, label, legend,\ntable, caption, tbody, tfoot, thead, tr, th, td {\n  margin: 0;\n  padding: 0;\n  border: 0;\n  outline: 0;\n  font-size: 100%;\n  vertical-align: baseline;\n  background: transparent;\n  color: #000000;\n  font-family: \"\\5FAE\\8F6F\\96C5\\9ED1\"; }\n\nbody {\n  line-height: 1;\n  padding-top: 60px; }\n\nol, ul {\n  list-style: none; }\n\na {\n  text-decoration: none; }\n\nnav {\n  background-color: #F1F0F0;\n  border-bottom: solid 1px #C6C6C6;\n  position: fixed;\n  margin-top: -60px;\n  width: 100%; }\n  nav ul {\n    margin-left: 60%;\n    padding: 10px; }\n    nav ul li {\n      display: inline-block;\n      margin-right: 20px; }\n\n.textList li {\n  text-align: center;\n  font-weight: 600;\n  font-size: 26px;\n  margin-bottom: 50px; }\n  .textList li p {\n    margin-top: 30px;\n    font-weight: 400;\n    color: #717171;\n    font-size: 22px; }\n\n.textForm {\n  padding: 100px 0 0 30%; }\n\n.textContent {\n  width: 70%;\n  margin: 0 auto;\n  line-height: 130%; }\n  .textContent h1 {\n    margin-bottom: 50px;\n    font-size: 26px;\n    text-align: center; }\n  .textContent p {\n    margin-bottom: 80px; }\n  .textContent button {\n    float: right; }\n", ""]);
+
+	// exports
 
 
 /***/ }

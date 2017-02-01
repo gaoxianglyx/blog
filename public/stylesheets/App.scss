@@ -1,0 +1,76 @@
+@mixin dis_whole {
+  width: 100%;
+  height: 100%;
+}
+html, body{
+  background-color: #ddd;
+  @include dis_whole;
+}
+.content{
+  @include dis_whole;
+}
+.stage{
+  position: absolute;
+  margin-top: -24px;
+  width: 100%;
+  height:100%;
+}
+.img-sec{
+  position: relative;
+  background-color: #ddd;
+  overflow: hidden;
+  perspective: 1800px;
+  @include dis_whole;
+  @at-root {
+    .img-figure {
+      position: absolute;
+      width: 320px;
+      height: 360px;
+      margin: 0;
+      padding: 40px;
+      box-sizing: border-box;
+      background-color: #fff;
+      cursor: pointer;
+      //三个参数分别代表xyz轴的变形原点
+      transform-origin: 0 50% 0;
+      transform-style: preserve-3d;
+      //定义left和top变化时变化的时间和动画类型
+      transition: transform .6s ease-in-out, left .6s ease-in-out, top .6s ease-in-out;
+      //&:sass对于父类写的属性，向右移动320px(一个图片的宽度),达到翻转后还是在原处
+      &.is-inverse {
+        transform: translate(320px) rotateY(180deg);
+      }
+    }
+    .img-back {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      padding: 30px;
+      box-sizing: border-box;
+      text-align: center;
+      color: #666;
+      transform: rotateY(180deg) translateZ(1px);
+      backface-visibility:hidden;
+      
+      background: #fff;
+    }
+    figcaption{
+      text-align: center;
+      .img-title{
+        margin: 20px 0 0 0;
+        color: #a7a0a2;
+        font-size: 16px;
+      }
+    }
+  }
+}
+.controller-nav {
+  position: absolute;
+  left: 0;
+  bottom: 20px;
+  z-index: 101;
+  width: 100%;
+  text-align: center;
+}

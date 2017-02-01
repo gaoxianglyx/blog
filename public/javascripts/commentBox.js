@@ -15,8 +15,8 @@ class Comment extends React.Component {
           <h2 className="commentAuthor">
             {this.props.author}
           </h2>
-          <span dangerouslySetInnerHTML={this.rawMarkup()} />
           <button className="delate" onClick={this.onclick.bind(this)}>删除</button>
+          <span dangerouslySetInnerHTML={this.rawMarkup()} />
           </div>
           );
     }
@@ -46,7 +46,7 @@ class CommentForm extends React.Component {
         if (!text || !author) {
           return;
       }
-      this.props.onCommentSubmit({author: author, text: text});
+      this.props.onCommentSubmit({author: author, text: text, TextId: window.location.hash.substring(14)});
       this.refs.author.value = '';
       this.refs.text.value = '';
       return;
@@ -65,12 +65,13 @@ class CommentForm extends React.Component {
 class CommentBox extends React.Component {
     constructor(props){
         super(props);
+        this.id = window.location.hash.substring(14);
         this.state={
           data:[]
       }
   }
   deleteClick (index) {
-    var url = '/comments/'+index;
+    var url = '/comments/'+index+'/'+this.id;
     $.ajax({
       url: url,
       type: 'delete',
@@ -81,14 +82,14 @@ class CommentBox extends React.Component {
 }
 loadCommentsFromServer () {
     $.ajax({
-      url: '/comments',
+      url: '/comments/'+this.id,
       dataType: 'json',
-      cache: false,
+      type: 'GET',
       success : (data) => {
         this.setState({data: data});
     },
     error (xhr, status, err) {
-        console.error(comment, status, err.toString());
+        console.error( status, err.toString());
     }
 });
 }
@@ -97,7 +98,7 @@ handleCommentSubmit (comment) {
     var newComments = comments.concat([comment]);
     this.setState({data: newComments});    
     $.ajax({
-      url: this.props.url,
+      url: '/comments/'+this.id,
       dataType: 'json',
       type: 'POST',
       data: comment,
@@ -116,7 +117,7 @@ componentDidMount () {
 render () {
     return (
       <div className="commentBox">
-      <h1>我的留言板</h1>
+      <h2>请留言</h2>
       <CommentList data={this.state.data} delete={this.deleteClick.bind(this)}/>
       <CommentForm onCommentSubmit={this.handleCommentSubmit.bind(this)} />
       </div>
