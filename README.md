@@ -59,3 +59,11 @@ mongod --dbpath D:/mongodb/data
 - 简历页
 - 关于自己
 - 相册展示
+
+## 重构方案
+1. 使用redux管理数据流做登陆登出的状态管理
+2. 使用webpack的code Splitting做延迟加载
+3. 重构样式
+4. 购买云服务器上线
+5. 使用node同构和直出增进性能和优化seo
+6. 使用CND缓存图片，js等静态资源
